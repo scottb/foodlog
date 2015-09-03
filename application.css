@@ -1,0 +1,15 @@
+#charts>div { height: 300px; }
+div#weight-chart { height: 500px; }
+
+#calories-chart svg { color: #f0ad4e; }
+#steps-chart svg { color: #5cb85c; }
+
+#foodlog { white-space: nowrap; }
+#foodlog tbody tr.summary { cursor: cell; }
+#foodlog tbody tr.summary td:nth-child(3) { text-align: right; }
+#foodlog tbody tr.detail td:nth-child(3) { text-align: right; padding-right: 2em; }
+#foodlog tbody tr.detail+tr.detail td:nth-child(2) { text-align: right; padding-right: 2em; }
+
+.summary td:nth-of-type(2) { white-space: nowrap; truncate: overflow: hidden; text-overflow: ellipsis; }
+.detail { display: none; }
+.detail.visible { display: table-row; }
