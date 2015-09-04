@@ -180,6 +180,10 @@ require(['foodlog', 'd3', 'nvd3'], function(FoodLog, d3, nv) {
   setDataTag(document.querySelector('#footnote3 data'), roundTo(loss / period, 20));
   */
 
+  function pluck(key) {
+    if (typeof key == 'function') return function(entry) { return key(entry) };
+    return function(entry) { return entry[key] };
+  }
   function collect(key) {
     if (typeof key == 'function') return function(entry) { return { x: entry._date, y: key(entry) }; };
     return function(entry) { return { x: entry._date, y: entry[key] }; };
@@ -187,7 +191,26 @@ require(['foodlog', 'd3', 'nvd3'], function(FoodLog, d3, nv) {
   function sum(collection, key) {
     if (key) return collection.reduce(function(acc, entry) { return acc + entry[key]; }, 0);
     return collection.reduce(function(acc, entry) { return acc + entry; }, 0);
-  };
+  }
+
+  function difference() {
+    var prev = 0;
+    return function(n) {
+      var result = n - prev;
+      prev = n;
+      return result;
+    };
+  }
+  function pairwiseProduct() {
+    var prev = 0;
+    return function(n) {
+      var result = n * prev;
+      prev = n;
+      return result;
+    };
+  }
+  function positive(n) { return n > 0; }
+  function negative(n) { return n < 0; }
 
   var weights = FoodLog.map(collect('weight'));
   var averages = FoodLog.map(collect('average'));
@@ -196,6 +219,35 @@ require(['foodlog', 'd3', 'nvd3'], function(FoodLog, d3, nv) {
   var sigmaVariation = Math.sqrt(sum(FoodLog.map(function(entry) { var delta = entry.error - meanVariation; return delta*delta; }))/FoodLog.length);
   var steps = FoodLog.map(collect('steps'));
   var calories = FoodLog.map(function(entry, i) { return { x: entry._date, y: sum(entry.meals.map(function(entry) { return sum(entry.items, 'calories'); })) }; });
+
+  /* NOTE: this is advice on maintenance, and is only relevant then...
+  var errors = FoodLog.map(pluck('error'));
+
+  function noteAdvice(s) {
+    var advice = document.createElement('p');
+    advice.className = 'alert alert-warning';
+    advice.appendChild(document.createTextNode(s));
+    document.querySelector('body > .container').appendChild(advice);
+  }
+
+  var sigma = 0.5497336634431611;
+
+  // 9 points with the same sign
+  if (errors.slice(-9).every(positive)) noteAdvice("Nine consecutive measurements above the mean suggests you’re gaining.");
+  if (errors.slice(-9).every(negative)) noteAdvice("Nine consecutive measurements above the mean suggests you’re losing.");
+  // 6 points in a row steadily increasing or decreasing
+  var differences = errors.slice(-6).map(difference());
+  if (differences.every(positive)) noteAdvice("Six consecutive increasing measurements suggests you’re gaining.");
+  if (differences.every(negative)) noteAdvice("Six consecutive decreasing measurements suggests you’re losing.");
+  // 14 points in a row alternating up and down
+  if (errors.slice(-14).map(pairwiseProduct()).every(negative)) noteAdvice("Fourteen alternating measurements suggests you’re over-reacting.");
+  // 2 of 3 in a row with |bin| >= 3
+  if (errors.slice(-3).filter(function(n) { return Math.abs(n / sigma) >= 3; }).length > 1) noteAdvice("Two of three measurements more than three sigma from the mean suggests you’re off your diet.");
+  // 4 of 5 in a row with |bin| >= 2
+  if (errors.slice(-5).filter(function(n) { return Math.abs(n / sigma) >= 2; }).length > 3) noteAdvice("Four of five in measurements more than two sigma from the mean suggests you’re off your diet.");
+  // 15 in a row with |bin| <= 1
+  if (errors.slice(-15).every(function(n) { return Math.abs(n / sigma) <= 1; })) noteAdvice("Fifteen consecutive measurements less than one sigma from the mean suggests a measurement problem.");
+  */
 
   setDataTag(document.querySelector('#footnote3 data:first-of-type'), meanVariation.toFixed(2));
   setDataTag(document.querySelector('#footnote3 data:last-of-type'), (2.575829 * sigmaVariation).toFixed(2));
