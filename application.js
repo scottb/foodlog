@@ -86,7 +86,7 @@ require(['foodlog', 'd3', 'nvd3'], function(FoodLog, d3, nv) {
       if (queue.length > width) sum -= queue.shift();
       return sum / queue.length;
     };
-  })(10);
+  })(14);
 
   function glyph(name, extraClass) {
     var result = document.createElement("span");
